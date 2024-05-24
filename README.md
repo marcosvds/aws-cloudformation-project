@@ -398,7 +398,7 @@ Para uma estimativa precisa, consideramos os custos de todos os principais recur
 
 O relatório completo com a análise de custo detalhada pode ser acessado no seguinte link:
 
-[Análise de Custo com a Calculadora AWS (PDF)]([sandbox:/mnt/data/Analise_Custo_AWS.pdf](https://github.com/marcosvds/aws-cloudformation-project/blob/main/public/My%20Estimate%20-%20Calculadora%20de%20Pre%C3%A7os%20da%20AWS.pdf))
+[Análise de Custo com a Calculadora AWS (PDF)](https://github.com/marcosvds/aws-cloudformation-project/blob/main/public/My%20Estimate%20-%20Calculadora%20de%20Pre%C3%A7os%20da%20AWS.pdf)
 
 Esta análise ajudará a planejar e gerenciar o orçamento do projeto, garantindo que os custos se mantenham dentro dos limites previstos e que a infraestrutura possa ser sustentada de forma eficiente ao longo do tempo.
 
