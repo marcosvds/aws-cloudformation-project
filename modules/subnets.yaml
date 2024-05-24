@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Configuração das Subnets.'
+
+Parameters:
+  VPCId:
+    Type: String # Parâmetro que recebe o ID da VPC
+
+Resources:
+  # Recurso que define a primeira Subnet
+  MySubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCId # Referencia o ID da VPC passado como parâmetro
+      CidrBlock: 10.0.1.0/24 # Faixa de IPs da Subnet
+      AvailabilityZone: !Select [0, !GetAZs ''] # Seleciona a primeira zona de disponibilidade
+      MapPublicIpOnLaunch: true # Habilita a atribuição automática de IP público às instâncias
+
+  # Recurso que define a segunda Subnet
+  MySubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCId # Referencia o ID da VPC passado como parâmetro
+      CidrBlock: 10.0.2.0/24 # Faixa de IPs da Subnet
+      AvailabilityZone: !Select [1, !GetAZs ''] # Seleciona a segunda zona de disponibilidade
+      MapPublicIpOnLaunch: true # Habilita a atribuição automática de IP público às instâncias
+
+Outputs:
+  # Saída que fornece o ID da primeira Subnet criada
+  Subnet1Id:
+    Description: "ID of the first Subnet"
+    Value: !Ref MySubnet1 # Referencia o recurso MySubnet1 para obter seu ID
+  
+  # Saída que fornece o ID da segunda Subnet criada
+  Subnet2Id:
+    Description: "ID of the second Subnet"
+    Value: !Ref MySubnet2 # Referencia o recurso MySubnet2 para obter seu ID

@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Configuração do Load Balancer.'
+
+Parameters:
+  VPCId:
+    Type: String # Parâmetro que recebe o ID da VPC
+  SubnetIds:
+    Type: CommaDelimitedList # Parâmetro que recebe uma lista de IDs das Subnets
+  SecurityGroupId:
+    Type: String # Parâmetro que recebe o ID do Security Group
+
+Resources:
+  # Recurso que define o Target Group do Load Balancer
+  MyTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPCId # Referencia o ID da VPC passado como parâmetro
+      Port: 80 # Porta em que o Target Group escutará
+      Protocol: HTTP # Protocolo usado pelo Target Group
+      HealthCheckProtocol: HTTP # Protocolo usado para a verificação de integridade
+      HealthCheckPort: 80 # Porta usada para a verificação de integridade
+      HealthCheckPath: / # Caminho usado para a verificação de integridade
+      Matcher:
+        HttpCode: 200 # Código de resposta HTTP esperado para considerar a instância saudável
+      TargetType: instance # Tipo de alvo (instância)
+
+  # Recurso que define o Load Balancer
+  MyLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Subnets: !Ref SubnetIds # Referencia os IDs das Subnets passados como parâmetro
+      SecurityGroups:
+        - !Ref SecurityGroupId # Referencia o ID do Security Group passado como parâmetro
+      Type: application # Tipo de Load Balancer (aplicação)
+
+  # Recurso que define o Listener do Load Balancer
+  MyListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref MyTargetGroup # Ação padrão: encaminhar para o Target Group
+      LoadBalancerArn: !Ref MyLoadBalancer # Referencia o ARN do Load Balancer
+      Port: 80 # Porta em que o Listener escutará
+      Protocol: HTTP # Protocolo usado pelo Listener
+
+Outputs:
+  # Saída que fornece o DNS Name do Load Balancer criado
+  LoadBalancerDNSName:
+    Description: "DNS Name of the Application Load Balancer"
+    Value: !GetAtt MyLoadBalancer.DNSName # Referencia o recurso MyLoadBalancer para obter seu DNS Name
+
+  # Saída que fornece o ARN do Target Group criado
+  TargetGroupArn:
+    Description: "ARN of the Target Group"
+    Value: !Ref MyTargetGroup # Referencia o recurso MyTargetGroup para obter seu ARN

@@ -1,0 +1,59 @@
+/* Importações do Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definição de variáveis CSS para cores */
+:root {
+  --foreground-rgb: 255, 255, 255; /* Texto branco */
+  --background-start-rgb: 21, 17, 1; /* Fundo mais escuro da paleta */
+  --background-end-rgb: 21, 17, 1;   /* Fundo mais escuro da paleta */
+}
+
+/* Preferências de Tema Escuro */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255; /* Texto branco */
+    --background-start-rgb: 21, 17, 1; /* Fundo mais escuro da paleta */
+    --background-end-rgb: 21, 17, 1;   /* Fundo mais escuro da paleta */
+  }
+}
+
+/* Estilos Globais */
+body {
+  color: rgb(var(--foreground-rgb)); /* Define a cor do texto baseada nas variáveis */
+  background: linear-gradient(to bottom, rgb(var(--background-start-rgb)), rgb(var(--background-end-rgb))); /* Aplica um gradiente de fundo */
+  font-family: 'Roboto', sans-serif; /* Define a fonte padrão como Roboto */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Estilos para tags HTML comuns */
+h1, h2, h3, h4, h5, h6 {
+  color: rgb(var(--foreground-rgb));
+  margin: 0;
+  padding: 0.5em 0;
+}
+
+p {
+  margin: 0;
+  padding: 0.5em 0;
+  line-height: 1.6;
+}
+
+a {
+  color: rgb(var(--foreground-rgb));
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Utilidade customizada */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Configuração do Security Group.'
+
+Parameters:
+  VPCId:
+    Type: String # Parâmetro que recebe o ID da VPC
+
+Resources:
+  # Recurso que define o Security Group
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Security Group for web application" # Descrição do Security Group
+      VpcId: !Ref VPCId # Referencia o ID da VPC passado como parâmetro
+      SecurityGroupIngress:
+        # Permite tráfego HTTP na porta 80 de qualquer IP
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        # Permite tráfego SSH na porta 22 de qualquer IP
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        # Permite tráfego ICMP de qualquer IP
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+
+Outputs:
+  # Saída que fornece o ID do Security Group criado
+  SecurityGroupId:
+    Description: "ID of the Security Group"
+    Value: !Ref MySecurityGroup # Referencia o recurso MySecurityGroup para obter seu ID

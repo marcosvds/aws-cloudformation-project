@@ -1,0 +1,395 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS CloudFormation para configurar VPC, Subnet, Auto Scaling com ALB e CloudWatch Alarms'
+
+Resources:
+  ######################
+  # VPC Configuration  #
+  ######################
+
+  # Recurso para criar uma VPC (Virtual Private Cloud)
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      # CidrBlock define o intervalo de endereços IP para a VPC
+      CidrBlock: 10.0.0.0/16
+      # EnableDnsSupport habilita o suporte a DNS dentro da VPC
+      EnableDnsSupport: true
+      # EnableDnsHostnames habilita nomes DNS atribuídos pela Amazon para instâncias na VPC
+      EnableDnsHostnames: true
+
+  # Recurso para criar um Internet Gateway
+  MyInternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  # Recurso para anexar o Internet Gateway à VPC
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      # Referência ao ID da VPC criada anteriormente
+      VpcId: !Ref MyVPC
+      # Referência ao ID do Internet Gateway criado anteriormente
+      InternetGatewayId: !Ref MyInternetGateway
+
+  #########################
+  # Subnet Configuration  #
+  #########################
+
+  # Recurso para criar a primeira Subnet na VPC
+  MySubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      # Referência ao ID da VPC onde a subnet será criada
+      VpcId: !Ref MyVPC
+      # CidrBlock define o intervalo de endereços IP para a Subnet
+      CidrBlock: 10.0.1.0/24
+      # Define a zona de disponibilidade onde a subnet será criada
+      AvailabilityZone: !Select [0, !GetAZs '']
+      # Habilita a atribuição automática de endereços IP públicos para instâncias lançadas nesta subnet
+      MapPublicIpOnLaunch: true
+
+  # Recurso para criar a segunda Subnet na VPC
+  MySubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      # Referência ao ID da VPC onde a subnet será criada
+      VpcId: !Ref MyVPC
+      # CidrBlock define o intervalo de endereços IP para a Subnet
+      CidrBlock: 10.0.2.0/24
+      # Define a zona de disponibilidade onde a subnet será criada
+      AvailabilityZone: !Select [1, !GetAZs '']
+      # Habilita a atribuição automática de endereços IP públicos para instâncias lançadas nesta subnet
+      MapPublicIpOnLaunch: true
+
+  ##############################
+  # Route Table Configuration  #
+  ##############################
+
+  # Recurso para criar uma tabela de rotas na VPC
+  MyRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      # Referência ao ID da VPC onde a tabela de rotas será criada
+      VpcId: !Ref MyVPC
+
+  # Recurso para criar uma rota na tabela de rotas
+  MyRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      # Referência ao ID da tabela de rotas onde a rota será adicionada
+      RouteTableId: !Ref MyRouteTable
+      # Define o bloco CIDR de destino para o tráfego que será roteado (neste caso, todo o tráfego - 0.0.0.0/0)
+      DestinationCidrBlock: 0.0.0.0/0
+      # Referência ao ID do Internet Gateway que será usado para rotear o tráfego
+      GatewayId: !Ref MyInternetGateway
+
+  # Recurso para associar a primeira subnet à tabela de rotas
+  SubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      # Referência ao ID da subnet que será associada
+      SubnetId: !Ref MySubnet
+      # Referência ao ID da tabela de rotas que será associada à subnet
+      RouteTableId: !Ref MyRouteTable
+
+  # Recurso para associar a segunda subnet à tabela de rotas
+  SubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      # Referência ao ID da subnet que será associada
+      SubnetId: !Ref MySubnet2
+      # Referência ao ID da tabela de rotas que será associada à subnet
+      RouteTableId: !Ref MyRouteTable
+
+  #################################
+  # Security Group Configuration  #
+  #################################
+
+  # Recurso para criar um Security Group para a aplicação web
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      # Descrição do Security Group
+      GroupDescription: "Security Group for web application"
+      # Referência ao ID da VPC onde o Security Group será criado
+      VpcId: !Ref MyVPC
+      # Regras de entrada (ingress) para o Security Group
+      SecurityGroupIngress:
+        # Permitir tráfego HTTP na porta 80 de qualquer IP
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        # Permitir tráfego SSH na porta 22 de qualquer IP
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        # Permitir tráfego ICMP (ping) de qualquer IP
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+
+  ##########################################
+  # Launch Configuration and Auto Scaling  #
+  ##########################################
+
+  # Recurso para criar uma Launch Configuration para o Auto Scaling
+  MyLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      # ID da AMI (Amazon Machine Image) a ser usada para instâncias lançadas pelo Auto Scaling
+      ImageId: ami-09040d770ffe2224f
+      # Tipo de instância a ser usado para as instâncias lançadas
+      InstanceType: t2.medium
+      # Lista de Security Groups a serem associados às instâncias
+      SecurityGroups:
+        - !Ref MySecurityGroup
+      # Nome da Key Pair a ser usada para acesso SSH às instâncias
+      KeyName: KeyPair
+      # Perfil de instância IAM a ser associado às instâncias para fornecer permissões
+      IamInstanceProfile: !Ref InstanceProfile
+      # Script de User Data a ser executado no lançamento das instâncias
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo apt-get update -y && sudo apt-get install -y git
+          sudo curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+          export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+          nvm install 20
+          git clone https://github.com/marcosvds/todo-list-nextjs.git /home/ubuntu/app
+          cd /home/ubuntu/app
+          npm install && npm run build
+          npm start &
+
+  # Recurso para criar um Auto Scaling Group
+  MyAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      # Referência ao nome da Launch Configuration a ser usada pelo Auto Scaling Group
+      LaunchConfigurationName: !Ref MyLaunchConfig
+      # Número mínimo de instâncias no Auto Scaling Group
+      MinSize: '2'
+      # Número máximo de instâncias no Auto Scaling Group
+      MaxSize: '5'
+      # Capacidade desejada de instâncias no Auto Scaling Group
+      DesiredCapacity: '2'
+      # Lista de ARNs dos Target Groups para registrar as instâncias do Auto Scaling Group
+      TargetGroupARNs:
+        - !Ref MyTargetGroup
+      # Lista de IDs das Subnets onde o Auto Scaling Group deve lançar as instâncias
+      VPCZoneIdentifier:
+        - !Ref MySubnet
+        - !Ref MySubnet2
+      Tags:
+        - Key: Name
+          Value: CloudProjectInstance
+          PropagateAtLaunch: true
+        - Key: Environment
+          Value: Production
+          PropagateAtLaunch: true
+
+  #########################################
+  # CloudWatch Alarm and Scaling Policy   #
+  #########################################
+
+  # Recurso para criar um alarme do CloudWatch que monitora a utilização da CPU
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      # Descrição do alarme
+      AlarmDescription: "Alarme quando CPU > 70%"
+      # Nome da métrica a ser monitorada
+      MetricName: CPUUtilization
+      # Namespace da métrica (neste caso, métricas de instâncias EC2)
+      Namespace: AWS/EC2
+      # Estatística da métrica a ser utilizada (média neste caso)
+      Statistic: Average
+      # Período de agregação da métrica em segundos
+      Period: '300'
+      # Número de períodos que a métrica deve exceder o limite antes de acionar o alarme
+      EvaluationPeriods: '1'
+      # Limite de utilização da CPU que aciona o alarme
+      Threshold: '70'
+      # Operador de comparação para o limite (maior ou igual ao limite neste caso)
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      # Ações a serem executadas quando o alarme é acionado (neste caso, a política de aumento de escala)
+      AlarmActions:
+        - !Ref ScaleUpPolicy
+
+  # Recurso para criar uma política de aumento de escala (Scale-Up) para o Auto Scaling Group
+  ScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      # Referência ao nome do Auto Scaling Group ao qual a política será aplicada
+      AutoScalingGroupName: !Ref MyAutoScalingGroup
+      # Tipo de ajuste (neste caso, alteração na capacidade)
+      AdjustmentType: ChangeInCapacity
+      # Quantidade de instâncias a adicionar quando a política é acionada
+      ScalingAdjustment: '1'
+      # Tempo de espera em segundos após a aplicação da política antes que novos ajustes possam ser feitos
+      Cooldown: '300'
+
+  ##################################################
+  # Application Load Balancer (ALB) Configuration  #
+  ##################################################
+
+  # Recurso para criar um Target Group para o Application Load Balancer (ALB)
+  MyTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      # Referência ao ID da VPC onde o Target Group será criado
+      VpcId: !Ref MyVPC
+      # Porta na qual o Target Group irá receber tráfego
+      Port: 80
+      # Protocolo usado pelo Target Group
+      Protocol: HTTP
+      # Protocolo usado para as verificações de integridade
+      HealthCheckProtocol: HTTP
+      # Porta usada para as verificações de integridade
+      HealthCheckPort: 80
+      # Caminho usado para as verificações de integridade
+      HealthCheckPath: /
+      # Código de resposta HTTP esperado para uma verificação de integridade bem-sucedida
+      Matcher:
+        HttpCode: 200
+      # Tipo de destino (neste caso, instâncias EC2)
+      TargetType: instance
+
+  # Recurso para criar um Application Load Balancer (ALB)
+  MyLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      # Lista de IDs das Subnets onde o ALB será criado
+      Subnets:
+        - !Ref MySubnet
+        - !Ref MySubnet2
+      # Lista de IDs dos Security Groups a serem associados ao ALB
+      SecurityGroups:
+        - !Ref MySecurityGroup
+      # Tipo de Load Balancer (neste caso, application)
+      Type: application
+
+  # Recurso para criar um Listener para o Application Load Balancer (ALB)
+  MyListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      # Ação padrão do Listener (neste caso, encaminhamento para o Target Group)
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref MyTargetGroup
+      # Referência ao ARN do Load Balancer
+      LoadBalancerArn: !Ref MyLoadBalancer
+      # Porta na qual o Listener irá ouvir
+      Port: 80
+      # Protocolo usado pelo Listener
+      Protocol: HTTP
+
+  ###########################
+  # DynamoDB Configuration  #
+  ###########################
+
+  # Recurso para criar uma tabela do DynamoDB
+  PostsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # Nome da tabela
+      TableName: PostsTable
+      # Definições de atributos para a tabela
+      AttributeDefinitions:
+        - AttributeName: UserID
+          AttributeType: S
+        - AttributeName: Title
+          AttributeType: S
+        - AttributeName: Text
+          AttributeType: S
+      # Esquema de chave para a tabela
+      KeySchema:
+        - AttributeName: UserID
+          KeyType: HASH
+        - AttributeName: Title
+          KeyType: RANGE
+      # Definição de um índice secundário global
+      GlobalSecondaryIndexes:
+        - IndexName: TextIndex
+          KeySchema:
+            - AttributeName: Text
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          # Throughput provisionado para o índice
+          ProvisionedThroughput:
+            ReadCapacityUnits: 10
+            WriteCapacityUnits: 10
+      # Throughput provisionado para a tabela
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+      # Tags para a tabela
+      Tags:
+        - Key: Environment
+          Value: Production
+
+  ################################################
+  # IAM Role and Instance Profile Configuration  #
+  ################################################
+
+  # Recurso para criar um Role do IAM com permissões para acessar o DynamoDB
+  DynamoDBAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      # Documento de política para assumir o Role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              # Serviço que pode assumir o Role (neste caso, instâncias EC2)
+              Service: "ec2.amazonaws.com"
+            Action: "sts:AssumeRole"
+      # Políticas associadas ao Role
+      Policies:
+        - PolicyName: "DynamoDBAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  # Ações permitidas no DynamoDB
+                  - "dynamodb:GetItem"
+                  - "dynamodb:Scan"
+                  - "dynamodb:Query"
+                  - "dynamodb:PutItem"
+                  - "dynamodb:UpdateItem"
+                  - "dynamodb:DeleteItem"
+                # Recurso para o qual as ações são permitidas (neste caso, a tabela PostsTable)
+                Resource:
+                  - !GetAtt PostsTable.Arn
+
+  # Recurso para criar um Instance Profile do IAM
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      # Lista de Roles a serem associados ao Instance Profile
+      Roles:
+        - !Ref DynamoDBAccessRole
+
+Outputs:
+  ####################
+  # Outputs Section  #
+  ####################
+
+  # Saída que fornece o ID da VPC criada
+  VPCId:
+    Description: "ID of the newly created VPC"
+    Value: !Ref MyVPC
+
+  # Saída que fornece o ID da Subnet criada
+  SubnetId:
+    Description: "ID of the newly created Subnet"
+    Value: !Ref MySubnet
+
+  # Saída que fornece o DNS Name do Application Load Balancer criado
+  LoadBalancerDNSName:
+    Description: "DNS Name of the Application Load Balancer"
+    Value: !GetAtt MyLoadBalancer.DNSName

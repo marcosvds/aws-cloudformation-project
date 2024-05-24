@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Configuração da tabela DynamoDB.'
+
+Parameters:
+  DynamoDBAccessRole:
+    Type: String # Parâmetro que recebe o ARN do IAM Role para acesso ao DynamoDB
+
+Resources:
+  # Recurso que define a tabela DynamoDB
+  PostsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: PostsTable # Nome da tabela
+      AttributeDefinitions:
+        # Definição dos atributos da tabela
+        - AttributeName: UserID
+          AttributeType: S # Tipo de atributo: String
+        - AttributeName: Title
+          AttributeType: S # Tipo de atributo: String
+        - AttributeName: Text
+          AttributeType: S # Tipo de atributo: String
+      KeySchema:
+        # Definição da chave primária
+        - AttributeName: UserID
+          KeyType: HASH # Atributo de partição
+        - AttributeName: Title
+          KeyType: RANGE # Atributo de ordenação
+      GlobalSecondaryIndexes:
+        # Definição do índice secundário global
+        - IndexName: TextIndex
+          KeySchema:
+            - AttributeName: Text
+              KeyType: HASH # Atributo de partição do índice
+          Projection:
+            ProjectionType: ALL # Tipo de projeção: todos os atributos
+          ProvisionedThroughput:
+            ReadCapacityUnits: 10 # Capacidade de leitura provisionada
+            WriteCapacityUnits: 10 # Capacidade de escrita provisionada
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10 # Capacidade de leitura provisionada
+        WriteCapacityUnits: 10 # Capacidade de escrita provisionada
+      Tags:
+        # Tags para a tabela
+        - Key: Environment
+          Value: Production
+
+Outputs:
+  # Saída que fornece o nome da tabela DynamoDB criada
+  TableName:
+    Description: "Name of the DynamoDB Table"
+    Value: !Ref PostsTable # Referencia o recurso PostsTable para obter seu nome

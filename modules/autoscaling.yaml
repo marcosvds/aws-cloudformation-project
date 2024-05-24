@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Configuração do Auto Scaling Group.'
+
+Parameters:
+  VPCId:
+    Type: String # Parâmetro que recebe o ID da VPC
+  SubnetIds:
+    Type: CommaDelimitedList # Parâmetro que recebe uma lista de IDs das Subnets
+  SecurityGroupId:
+    Type: String # Parâmetro que recebe o ID do Security Group
+  InstanceProfile:
+    Type: String # Parâmetro que recebe o IAM Instance Profile
+
+Resources:
+  # Recurso que define a configuração de lançamento do Auto Scaling
+  MyLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: ami-09040d770ffe2224f # ID da AMI a ser usada para as instâncias
+      InstanceType: t2.medium # Tipo de instância
+      SecurityGroups:
+        - !Ref SecurityGroupId # Referencia o ID do Security Group passado como parâmetro
+      KeyName: myNewKeyPairUsEast2 # Nome da chave SSH para acesso às instâncias
+      IamInstanceProfile: !Ref InstanceProfile # Referencia o IAM Instance Profile passado como parâmetro
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo apt-get update -y
+          sudo apt-get install -y git
+
+          sudo curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+          [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+          nvm install 20
+
+          # Clonar o repositório Git
+          REPO_URL="https://github.com/nicolasyassuda/app-cloud.git"
+          APP_DIR="/home/ubuntu/app"
+
+          git clone $REPO_URL $APP_DIR
+          cd $APP_DIR
+
+          # Instalar dependências da aplicação
+          npm install
+
+          # Build da aplicação Next.js
+          npm run build
+          
+          # Rodar a aplicação Next.js
+          npm start &
+
+  # Recurso que define o Auto Scaling Group
+  MyAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref MyLaunchConfig # Referencia a configuração de lançamento criada acima
+      MinSize: '1' # Número mínimo de instâncias
+      MaxSize: '3' # Número máximo de instâncias
+      DesiredCapacity: '2' # Capacidade desejada
+      TargetGroupARNs:
+        - !Ref MyTargetGroup # Referencia o Target Group para o Load Balancer
+      VPCZoneIdentifier: !Ref SubnetIds # Referencia as subnets onde as instâncias serão lançadas
+
+  # Recurso que define um alarme do CloudWatch para monitorar a utilização da CPU
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarme quando CPU > 70%" # Descrição do alarme
+      MetricName: CPUUtilization # Nome da métrica a ser monitorada
+      Namespace: AWS/EC2 # Namespace da métrica
+      Statistic: Average # Estatística da métrica
+      Period: '300' # Período de avaliação em segundos
+      EvaluationPeriods: '1' # Número de períodos de avaliação
+      Threshold: '70' # Limite para acionar o alarme
+      ComparisonOperator: GreaterThanOrEqualToThreshold # Operador de comparação
+      AlarmActions:
+        - !Ref ScaleUpPolicy # Ação a ser tomada quando o alarme é acionado
+
+  # Recurso que define a política de escalonamento para o Auto Scaling Group
+  ScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref MyAutoScalingGroup # Referencia o Auto Scaling Group criado acima
+      AdjustmentType: ChangeInCapacity # Tipo de ajuste
+      ScalingAdjustment: '1' # Número de instâncias a adicionar ou remover
+      Cooldown: '300' # Tempo de espera entre ajustes em segundos
+
+Outputs:
+  # Saída que fornece o ID do Auto Scaling Group criado
+  AutoScalingGroupId:
+    Description: "ID of the Auto Scaling Group"
+    Value: !Ref MyAutoScalingGroup # Referencia o recurso MyAutoScalingGroup para obter seu ID

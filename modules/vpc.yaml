@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Configuração da VPC.'
+
+Resources:
+  # Recurso que define a VPC
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16 # Faixa de IPs da VPC
+      EnableDnsSupport: true # Habilita suporte a DNS na VPC
+      EnableDnsHostnames: true # Habilita nomes DNS para instâncias dentro da VPC
+
+Outputs:
+  # Saída que fornece o ID da VPC criada
+  VPCId:
+    Description: "ID of the newly created VPC"
+    Value: !Ref MyVPC # Referencia o recurso MyVPC para obter seu ID

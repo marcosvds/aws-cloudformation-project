@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Configuração dos IAM Roles.'
+
+Resources:
+  # Recurso que define o IAM Role para acesso ao DynamoDB
+  DynamoDBAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17" # Versão do documento de política de confiança
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "ec2.amazonaws.com" # Serviço que pode assumir o Role (instâncias EC2)
+            Action: "sts:AssumeRole" # Ação que permite assumir o Role
+      Policies:
+        # Definição da política de acesso ao DynamoDB
+        - PolicyName: "DynamoDBAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17" # Versão do documento de política
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  # Ações permitidas no DynamoDB
+                  - "dynamodb:GetItem"
+                  - "dynamodb:Scan"
+                  - "dynamodb:Query"
+                  - "dynamodb:PutItem"
+                  - "dynamodb:UpdateItem"
+                  - "dynamodb:DeleteItem"
+                Resource:
+                  - !GetAtt PostsTable.Arn # Referencia o ARN da tabela DynamoDB
+
+  # Recurso que define o Instance Profile para o Role
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref DynamoDBAccessRole # Referencia o Role criado acima
+
+Outputs:
+  # Saída que fornece o ARN do Role de acesso ao DynamoDB
+  DynamoDBAccessRole:
+    Description: "ARN of the DynamoDB Access Role"
+    Value: !Ref DynamoDBAccessRole # Referencia o recurso DynamoDBAccessRole para obter seu ARN
+
+  # Saída que fornece o Instance Profile para EC2
+  InstanceProfile:
+    Description: "Instance Profile for EC2"
+    Value: !Ref InstanceProfile # Referencia o recurso InstanceProfile para obter seu nome

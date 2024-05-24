@@ -1,0 +1,14 @@
+# Ignorar arquivos de chave
+*.pem
+
+# Ignorar pasta suport
+suport/
+
+# Ignorar outros arquivos e pastas comuns que não devem ser rastreados pelo Git
+node_modules/
+.DS_Store
+*.log
+*.tmp
+
+# dependencies
+application/node_modules/
