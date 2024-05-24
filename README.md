@@ -569,4 +569,4 @@ Projeto desenvolvido por Marcos Vin√≠cius da Silva para a disciplina de Computa√
 
 #### Professores: 
 - [Rodolfo Avelino](https://www.linkedin.com/in/rodolfo-avelino-5494a65/)
-- [Tiago Demay](hthttps://www.linkedin.com/in/tiago-demay/)
+- [Tiago Demay](https://www.linkedin.com/in/tiago-demay/)
