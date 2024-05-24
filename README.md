@@ -76,6 +76,14 @@ aws cloudformation delete-stack --stack-name minha-stack --region us-east-2
 
 Este comando remove todos os recursos provisionados pela stack CloudFormation, permitindo uma limpeza completa do ambiente sem intervenção manual.
 
+#### Visualização do Site
+
+Comando para obter diretamente a URL do Load Balancer:
+
+```sh
+aws cloudformation describe-stacks --stack-name minha-stack --region us-east-2 --query "Stacks[0].Outputs[?OutputKey=='LoadBalancerDNSName'].OutputValue" --output text
+```
+
 ## EC2 com Auto Scaling
 
 ### Launch Configuration
@@ -417,3 +425,92 @@ Aqui está a representação visual da arquitetura AWS que provisionamos para es
 
 ![Diagrama de Arquitetura AWS](public/images/Diagrama2.png)
 
+### Análise de Carga
+
+#### Ferramenta de Análise de Carga
+
+Para implementar a análise de carga e desempenho da arquitetura, escolhemos o **Locust**. O Locust é uma ferramenta popular para testes de carga e desempenho, permitindo simular milhares de usuários simultâneos para testar a resistência de sistemas.
+
+#### Configuração do Locust
+
+Aqui está o código utilizado para o teste de carga com Locust:
+
+```python
+import uuid
+from locust import HttpUser, task, between
+from numpy import random
+
+class MyUser(HttpUser):
+    # Define o tempo de espera entre cada tarefa, variando entre 1 a 5 segundos
+    wait_time = between(1, 5)
+    
+    # Define o host alvo para os testes de carga
+    host = "http://minha--myloa-dvx9kptqyvuv-1885597525.us-east-2.elb.amazonaws.com/"
+    
+    @task
+    def my_task(self):
+        # Cria um corpo de requisição com dados fictícios para o envio do formulário
+        body = {
+            'UserID': f"{uuid.uuid4()}",  # Gera um ID único para cada usuário utilizando UUID
+            'Title': 'Título teste',  # Define um título genérico para o teste
+            'Text': 'Veja aqui você tem uma descrição genérica para sua atividade.'  # Texto descritivo genérico
+        }
+
+        # Envia uma requisição POST para o endpoint "api/submit-form" com o corpo definido acima
+        self.client.post("api/submit-form", json=body)
+        
+        # Envia uma requisição GET para o endpoint "api/submit-form" e armazena a resposta
+        response = self.client.get("api/submit-form")
+        
+        # Verifica se a resposta do GET foi bem-sucedida (status code 200)
+        if response.status_code == 200:
+            data = response.json()
+            if data:
+                # Se a resposta contém dados, imprime os dados recebidos
+                print("Requisição GET retornou dados:", data)
+            else:
+                # Se a resposta não contém dados, informa que nenhum dado foi retornado
+                print("Requisição GET não retornou nenhum dado")
+        else:
+            # Se a resposta do GET falhar, imprime o status code da falha
+            print("Requisição GET falhou com o status code:", response.status_code)
+```
+
+#### Resultados da Análise de Carga
+
+Para o teste de carga, utilizamos os seguintes parâmetros:
+
+- **Number of Users to Simulate**: 120
+- **Spawn Rate (Users per Second)**: 2
+- **Duration**: 1 minuto
+
+#### Gráficos e Observações
+
+A imagem anexada mostra os resultados do teste de carga, com os seguintes gráficos:
+
+![Teste de Carga](public/images/TesteCarga.png)
+
+1. **Total Requests per Second (RPS) e Failures/s**:
+   - O gráfico mostra a taxa de requisições por segundo (RPS) e o número de falhas por segundo.
+   - Observamos um aumento constante na RPS conforme o número de usuários aumentava.
+   - A taxa de falhas permaneceu baixa durante a maior parte do teste, indicando boa resiliência da aplicação sob carga inicial.
+
+2. **Response Times (ms)**:
+   - O gráfico exibe os tempos de resposta médios e no percentil 95.
+   - Houve um aumento nos tempos de resposta à medida que a carga aumentava.
+   - O tempo de resposta médio permaneceu mais estável, mas também apresentou um aumento conforme a carga se intensificava.
+
+3. **Number of Users**:
+   - Este gráfico mostra o aumento no número de usuários durante o teste.
+   - O número de usuários aumentou de forma constante conforme configurado para atingir o pico de 120 usuários no final do teste.
+
+#### Observações e Conclusões
+
+1. **Desempenho Inicial**:
+   - A aplicação conseguiu lidar bem com a carga inicial, com poucas falhas e tempos de resposta aceitáveis.
+
+2. **Aumento de Carga**:
+   - À medida que o número de usuários aumentou, os tempos de resposta também aumentaram significativamente, especialmente no percentil 95, indicando possíveis gargalos de desempenho.
+
+3. **Capacidade de Escala**:
+   - A infraestrutura mostrou uma capacidade razoável de escalar com o aumento da carga, mas os tempos de resposta indicam que pode haver necessidade de otimizações para melhorar o desempenho sob cargas mais pesadas.

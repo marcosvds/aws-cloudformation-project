@@ -7,7 +7,7 @@ class MyUser(HttpUser):
     wait_time = between(1, 5)
     
     # Define o host alvo para os testes de carga
-    host = "http://minha--myloa-m9vwhwmang54-1101900728.us-east-2.elb.amazonaws.com/"
+    host = "http://minha--myloa-dvx9kptqyvuv-1885597525.us-east-2.elb.amazonaws.com/"
     
     @task
     def my_task(self):
