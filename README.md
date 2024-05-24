@@ -28,7 +28,27 @@ O arquivo `cloud-infra-setup.yaml` contém toda a definição da infraestrutura.
 
 Cada recurso no arquivo CloudFormation é comentado para descrever sua finalidade e configuração. Por exemplo, a configuração da VPC, Subnets, Internet Gateway, Tabelas de Roteamento, Grupos de Segurança, Configurações de Auto Scaling, Application Load Balancer e DynamoDB são todas explicadas em detalhes no arquivo YAML.
 
+Aqui está a seção atualizada do README com os detalhes adicionais:
+
 ### Automação Completa
+
+#### Pré-requisitos
+
+Antes de começar, certifique-se de ter os seguintes pré-requisitos instalados e configurados em seu ambiente:
+
+1. **AWS CLI**: A AWS Command Line Interface (CLI) deve estar instalada e configurada com as credenciais da AWS.
+2. **Git**: O Git deve estar instalado para clonar o repositório do projeto.
+3. **Conta na AWS**: Uma conta válida na AWS para provisionar os recursos necessários.
+4. **Permissões**: Permissões suficientes na AWS para criar e gerenciar recursos, incluindo EC2, IAM, S3, e CloudFormation.
+
+#### Clone o Repositório
+
+Clone o repositório do projeto para seu ambiente local usando o comando Git:
+
+```sh
+git clone https://github.com/marcosvds/aws-cloudformation-project.git
+cd aws-cloudformation-project
+```
 
 #### Criação da Key Pair
 
