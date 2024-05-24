@@ -2,9 +2,6 @@
 
 Este projeto visa provisionar uma infraestrutura na AWS utilizando AWS CloudFormation. A infraestrutura engloba o uso de um Application Load Balancer (ALB), instâncias EC2 com Auto Scaling e um banco de dados DynamoDB.
 
-## Vídeo testando o site
-[![Vídeo testando o site](https://img.youtube.com/vi/F48l-CllhbA/0.jpg)](https://youtu.be/F48l-CllhbA)
-
 ## Estrutura do Projeto
 
 ```plaintext
@@ -86,6 +83,9 @@ Comando para obter diretamente a URL do Load Balancer:
 ```sh
 aws cloudformation describe-stacks --stack-name minha-stack --region us-east-2 --query "Stacks[0].Outputs[?OutputKey=='LoadBalancerDNSName'].OutputValue" --output text
 ```
+
+## Vídeo testando o site
+[![Vídeo testando o site](https://img.youtube.com/vi/F48l-CllhbA/0.jpg)](https://youtu.be/F48l-CllhbA)
 
 ## EC2 com Auto Scaling
 
