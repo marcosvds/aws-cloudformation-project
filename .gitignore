@@ -5,10 +5,10 @@
 suport/
 
 # Ignorar outros arquivos e pastas comuns que não devem ser rastreados pelo Git
-node_modules/
 .DS_Store
 *.log
 *.tmp
+node_modules/
 
 # dependencies
 application/node_modules/

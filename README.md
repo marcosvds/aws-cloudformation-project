@@ -514,3 +514,59 @@ A imagem anexada mostra os resultados do teste de carga, com os seguintes gráfi
 
 3. **Capacidade de Escala**:
    - A infraestrutura mostrou uma capacidade razoável de escalar com o aumento da carga, mas os tempos de resposta indicam que pode haver necessidade de otimizações para melhorar o desempenho sob cargas mais pesadas.
+
+### Configuração da Pipeline de CI/CD
+
+1. **CodeBuild Project**:
+   - Um projeto CodeBuild é configurado para construir a aplicação a partir do código fonte no GitHub.
+   - O token do GitHub é armazenado no AWS Secrets Manager para segurança.
+
+2. **Roles IAM**:
+   - Três roles são configuradas:
+     - `CodeBuildServiceRole`: Role para o serviço CodeBuild.
+     - `CodePipelineRole`: Role para o serviço CodePipeline.
+     - `CloudFormationExecutionRole`: Role para a execução do CloudFormation.
+
+3. **Pipeline de CI/CD**:
+   - A pipeline é configurada com três estágios: Source, Build e Deploy.
+   - No estágio Source, a pipeline obtém o código fonte do GitHub.
+   - No estágio Build, o CodeBuild constrói a aplicação.
+   - No estágio Deploy, o CloudFormation é usado para criar e atualizar a infraestrutura AWS.
+
+#### Utilização do AWS Secrets Manager
+
+- O AWS Secrets Manager é utilizado para armazenar o token do GitHub (`github_token`), garantindo que as credenciais sejam gerenciadas de forma segura.
+- A configuração do token é referenciada no template CloudFormation, assegurando que as credenciais não fiquem expostas no código.
+
+#### Processo de CI/CD
+
+1. **Geração do GitHub Token**:
+   - Acesse o GitHub, vá para as configurações de desenvolvedor e gere um novo token de acesso pessoal com permissões de leitura para os repositórios.
+
+2. **Armazenamento do Token no AWS Secrets Manager**:
+   - No AWS Secrets Manager, crie um novo segredo com a chave `github_token` e o valor do token gerado no GitHub.
+   - Nomeie o segredo como `MyGithubToken`.
+
+3. **Configuração da Pipeline**:
+   - O template `code-pipeline.yaml` utiliza o token armazenado no Secrets Manager para autenticar no GitHub.
+   - Execute o comando a seguir para criar a stack do CloudFormation que configura a pipeline de CI/CD:
+
+    ```sh
+    aws cloudformation create-stack --stack-name minha-pipeline --template-body file://code-pipeline.yaml --region us-east-2 --capabilities CAPABILITY_NAMED_IAM
+    ```
+
+4. **Automatização Completa**:
+   - Toda vez que há uma mudança no repositório GitHub, a pipeline é acionada automaticamente.
+   - O CodeBuild baixa o código, instala as dependências, executa os testes e cria os artefatos necessários.
+   - Os artefatos construídos são usados para criar ou atualizar a infraestrutura AWS usando o CloudFormation.
+
+
+# Autor
+Projeto desenvolvido por Marcos Vinícius da Silva para a disciplina de Computação em Nuvem do curso de Engenharia da Computação do Insper orientado
+
+#### Aluno:
+- [Marcos Vinícius da Silva](https://www.linkedin.com/in/marcosvinis/)
+
+#### Professores: 
+- [Rodolfo Avelino](https://www.linkedin.com/in/rodolfo-avelino-5494a65/)
+- [Tiago Demay](hthttps://www.linkedin.com/in/tiago-demay/)
