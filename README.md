@@ -415,5 +415,5 @@ A região us-east-2 foi escolhida devido a vários fatores, incluindo:
 
 Aqui está a representação visual da arquitetura AWS que provisionamos para este projeto:
 
-![Diagrama de Arquitetura AWS](public/images/Diagrama.png)
+![Diagrama de Arquitetura AWS](public/images/Diagrama2.png)
 
