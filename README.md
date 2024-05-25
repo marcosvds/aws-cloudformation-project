@@ -28,7 +28,6 @@ O arquivo `cloud-infra-setup.yaml` contém toda a definição da infraestrutura.
 
 Cada recurso no arquivo CloudFormation é comentado para descrever sua finalidade e configuração. Por exemplo, a configuração da VPC, Subnets, Internet Gateway, Tabelas de Roteamento, Grupos de Segurança, Configurações de Auto Scaling, Application Load Balancer e DynamoDB são todas explicadas em detalhes no arquivo YAML.
 
-Aqui está a seção atualizada do README com os detalhes adicionais:
 
 ### Automação Completa
 
