@@ -11,6 +11,7 @@ aws-cloudformation-project/
 ├── tests/ # Pasta com scripts de teste de carga
 ├── public/ # Pasta com imagens e arquivos públicos
 ├── cloud-infra-setup.yaml # Arquivo principal
+├── code-pipeline.yaml # Configuração da Pipeline
 ├── README.md # Relatório do projeto
 ```
 
