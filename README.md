@@ -585,7 +585,7 @@ A imagem anexada mostra os resultados do teste de carga, com os seguintes gráfi
 
 
 # Autor
-Projeto desenvolvido por Marcos Vinícius da Silva para a disciplina de Computação em Nuvem do curso de Engenharia da Computação do Insper orientado pelos professores Rodolfo Avelino e Tiago Demay.
+Projeto desenvolvido por Marcos Vinícius da Silva para a disciplina de Computação em Nuvem do curso de Engenharia da Computação do Insper orientado pelos professores Rodolfo Avelino, Tiago Demay e João Luisi.
 
 #### Aluno:
 - [Marcos Vinícius da Silva](https://www.linkedin.com/in/marcosvinis/)
@@ -593,3 +593,4 @@ Projeto desenvolvido por Marcos Vinícius da Silva para a disciplina de Computa�
 #### Professores: 
 - [Rodolfo Avelino](https://www.linkedin.com/in/rodolfo-avelino-5494a65/)
 - [Tiago Demay](https://www.linkedin.com/in/tiago-demay/)
+- [João Eduardo Luisi](https://www.linkedin.com/in/joao-eduardo-luisi/)
